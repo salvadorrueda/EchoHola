@@ -45,3 +45,13 @@ The script will:
 1. Extract the face from the provided image.
 2. Query the DeepFace service to find a match in the `db/` folder.
 3. Use `echovoice` to greet the identified person by name.
+
+## Stopping EchoHola
+
+To stop the recognition service and remove the containers, run:
+
+```bash
+docker compose down
+```
+
+This will safely shut down the DeepFace API.
