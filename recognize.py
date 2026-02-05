@@ -4,56 +4,65 @@ import os
 import sys
 
 # Configuració de l'API DeepFace
-DEEPFACE_API_URL = "http://localhost:5005/find"
-DB_PATH = "/app/db" # Ruta dins del contenidor
-LOCAL_DB_PATH = "./db"
+DEEPFACE_API_URL = "http://localhost:5005/verify"
+DB_PATH = "db" # Ruta local on buscar imatges per iterar
+REMOTE_DB_PATH = "/app/db" # Ruta dins del contenidor per referenciar
 
 def recognize_face(image_path):
     """
-    Envia una imatge a l'API de DeepFace per trobar coincidències.
+    Identifica una persona comparant la imatge amb la base de dades local
+    fent servir l'endpoint /verify de DeepFace.
     """
     if not os.path.exists(image_path):
         print(f"Error: No s'ha trobat la imatge {image_path}")
         return None
 
-    # Nota: L'API /find acostuma a necessitar la ruta de la db i la imatge font
-    # Usarem base64 o ruta si el contenidor té accés. 
-    # Com que hem muntat ./db:/app/db, passarem la ruta /app/db
-    
-    # Per simplicitat en aquest exemple, assumim que la imatge es passa com a path
-    # Si la imatge no està al volum, l'hauríem d'enviar com a base64 (l'API ho suporta)
-    
+    # Codificar la imatge d'entrada a base64
     import base64
     with open(image_path, "rb") as img_file:
         img_b64 = base64.b64encode(img_file.read()).decode('utf-8')
+    
+    img1_payload = f"data:image/jpeg;base64,{img_b64}"
 
-    payload = {
-        "img": f"data:image/jpeg;base64,{img_b64}",
-        "db_path": DB_PATH,
-        "detector_backend": "opencv",
-        "enforce_detection": False,
-        "align": True
-    }
-
-    try:
-        response = requests.post(DEEPFACE_API_URL, json=payload)
-        response.raise_for_status()
-        results = response.json()
-        
-        # Els resultats de /find venen en una llista de dataframes (com a llistes en JSON)
-        if results and 'results' in results and len(results['results']) > 0:
-            matches = results['results'][0] # Primer match de la primera cara trobada
-            if len(matches) > 0:
-                # El path del match conté el nom de la subcarpeta que és el nom de la persona
-                # Exemple: /app/db/salvador/foto1.jpg
-                match_path = matches[0]['identity']
-                name = match_path.split('/')[-2]
-                return name
-        
-        return "Unknown"
-    except Exception as e:
-        print(f"Error connectant amb DeepFace: {e}")
+    # Iterar sobre les cares conegudes a la carpeta db/
+    if not os.path.exists(DB_PATH):
+        print(f"Error: No existeix el directori {DB_PATH}")
         return None
+
+    known_people = [d for d in os.listdir(DB_PATH) if os.path.isdir(os.path.join(DB_PATH, d))]
+    
+    for person in known_people:
+        person_dir = os.path.join(DB_PATH, person)
+        # Buscar imatges de la persona
+        for filename in os.listdir(person_dir):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                # Construir la ruta remota (dins del contenidor) de la imatge de referència
+                # Ex: /app/db/salvador/photo1.jpg
+                img2_path = f"{REMOTE_DB_PATH}/{person}/{filename}"
+                
+                payload = {
+                    "img1": img1_payload,
+                    "img2": img2_path,
+                    "model_name": "VGG-Face",
+                    "detector_backend": "opencv",
+                    "distance_metric": "cosine"
+                }
+                
+                try:
+                    #print(f"Comparant amb {person} ({filename})...")
+                    response = requests.post(DEEPFACE_API_URL, json=payload)
+                    response.raise_for_status()
+                    result = response.json()
+                    
+                    if result.get("verified") is True:
+                        return person
+                        
+                except Exception as e:
+                    # Si falla una comparació, continuem
+                    # print(f"Error comparant amb {filename}: {e}")
+                    pass
+
+    return "Unknown"
 
 def greet(name):
     """
