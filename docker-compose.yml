@@ -1,0 +1,9 @@
+services:
+  deepface:
+    image: serengil/deepface
+    container_name: deepface_api
+    ports:
+      - "5005:5000"
+    volumes:
+      - ./db:/app/db
+    restart: always
