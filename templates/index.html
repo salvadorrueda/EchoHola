@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoHola Face Recognition</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: #bb86fc;
+            margin-bottom: 20px;
+        }
+
+        #video-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            width: 640px;
+            height: 480px;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror effect */
+        }
+
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #capture-btn {
+            background-color: #03dac6;
+            color: #000;
+        }
+
+        #capture-btn:hover {
+            background-color: #018786;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            min-height: 1.5em;
+        }
+
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>EchoHola Verification</h1>
+
+    <div id="video-container">
+        <video id="video" autoplay playsinline></video>
+    </div>
+
+    <div id="controls">
+        <button id="capture-btn">Capture & Verify</button>
+    </div>
+
+    <div id="status"></div>
+
+    <canvas id="canvas" width="640" height="480"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const statusDiv = document.getElementById('status');
+        const context = canvas.getContext('2d');
+
+        // Access the webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error detecting camera: ", err);
+                statusDiv.textContent = "Error accessing camera. Please allow permissions.";
+                statusDiv.style.color = "#ff5555";
+            });
+
+        captureBtn.addEventListener('click', () => {
+            statusDiv.textContent = "Processing...";
+            statusDiv.style.color = "#bb86fc";
+
+            // Draw current video frame to canvas
+            context.drawImage(video, 0, 0, 640, 480);
+            
+            // Get base64 data
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            // Send to backend
+            fetch('/recognize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusDiv.innerHTML = `Identified: <strong>${data.identity}</strong>`;
+                    statusDiv.style.color = "#03dac6";
+                } else if (data.error) {
+                    statusDiv.textContent = `Error: ${data.error}`;
+                    statusDiv.style.color = "#ff5555";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusDiv.textContent = "Network error or server error.";
+                statusDiv.style.color = "#ff5555";
+            });
+        });
+    </script>
+
+</body>
+</html>

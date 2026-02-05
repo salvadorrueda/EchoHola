@@ -1,57 +1,75 @@
-# EchoHola
+# EchoHola 🎥🔊
 
-EchoHola is a project designed to recognize people and greet them personally by name. The main goal is to create a natural and friendly interaction between humans and systems by combining person recognition with voice feedback.
+EchoHola is a facial recognition system that greets people by voice when they are identified through a webcam or an image. 
 
-The system identifies an individual using recognition technologies (such as facial recognition, voice recognition, or other identification methods) and automatically generates a personalized greeting like “Hello, Salvador.” This approach enhances user experience and makes interactions feel more human and engaging.
+It uses **DeepFace** (running in Docker) for recognition and **Flask** for the web interface.
 
-EchoHola can be applied in different environments, including offices, schools, smart homes, or access-controlled areas, where welcoming users in a personalized way adds value. The project is modular and extensible, allowing different recognition methods and voice engines to be integrated easily.
+## 🛠️ Prerequisites
 
-Overall, EchoHola aims to demonstrate how recognition technologies and speech synthesis can work together to create simple, friendly, and intelligent greeting systems.
+Before running EchoHola, ensure you have:
+- **Docker & Docker Compose**
+- **Python 3.10+**
+- **`echovoice`** installed and available in your PATH (for voice greetings).
 
-## Prerequisites
+## 🚀 Setup & Installation
 
-Before running EchoHola, ensure you have the following installed:
-- **Docker & Docker Compose** (to run the DeepFace API)
-- **Python 3** (to run the recognition script)
-- **Required Python Libraries**: `pip install requests`
-- **EchoVoice**: The custom voice engine used for greetings.
+1. **Clone the repository**:
+   ```bash
+   git clone <repo-url>
+   cd EchoHola
+   ```
 
-## Getting Started
+2. **Start DeepFace API**:
+   The recognition backend runs in a Docker container.
+   ```bash
+   docker compose up -d
+   ```
 
-### 1. Start the DeepFace Service
-Use Docker Compose to launch the recognition engine in the background:
+3. **Create a Python Virtual Environment**:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+4. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## 📖 Usage
+
+### 🌐 Web Interface (Recommended)
+The easiest way to use EchoHola is via the web interface which captures images from your webcam in real-time.
+
+1. **Run the Flask app**:
+   ```bash
+   python3 app.py
+   ```
+2. Open [http://localhost:5000](http://localhost:5000) in your browser.
+3. Click **"Capture & Verify"**.
+
+### 💻 CLI Recognition
+You can also run recognition on a specific image file:
 ```bash
-docker compose up -d
+python3 recognize.py path/to/image.jpg
 ```
 
-### 2. Configure the Face Database
-Create a folder structure inside the `db/` directory. Each subfolder should be named after the person and contain one or more clear photos of their face:
+## 📂 Database Configuration
+Add photos of people you want to recognize in the `db/` directory, organized by name. Each subfolder should be named after the person:
+
 ```text
 db/
 ├── salvador/
-│   └── photo1.jpg
+│   ├── photo1.jpg
+│   └── photo2.jpg
+├── joan/
+│   └── me.png
 └── unknown/
 ```
 
-## Usage
+## 🛑 Stopping the System
 
-To recognize a person from a new image and greet them personally:
-
-```bash
-python3 recognize.py path/to/your_capture.jpg
-```
-
-The script will:
-1. Extract the face from the provided image.
-2. Query the DeepFace service to find a match in the `db/` folder.
-3. Use `echovoice` to greet the identified person by name.
-
-## Stopping EchoHola
-
-To stop the recognition service and remove the containers, run:
-
+To stop the recognition service, run:
 ```bash
 docker compose down
 ```
-
-This will safely shut down the DeepFace API.
