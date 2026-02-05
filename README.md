@@ -69,7 +69,10 @@ db/
 
 ## 🛑 Stopping the System
 
-To stop the recognition service, run:
-```bash
-docker compose down
-```
+To stop EchoHola completely:
+
+1.  **Stop the Flask App**: Go to the terminal where `python3 app.py` is running and press `Ctrl + C`.
+2.  **Stop the DeepFace Service**: Run the following command in the project root:
+    ```bash
+    docker compose down
+    ```
