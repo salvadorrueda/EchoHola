@@ -3,4 +3,6 @@ db/
 *.jpeg
 *.png
 __pycache__/
+.venv/
+temp_uploads/
 .DS_Store
