@@ -54,6 +54,14 @@ You can also run recognition on a specific image file:
 python3 recognize.py path/to/image.jpg
 ```
 
+### 🆕 User Registration
+If a user is identified as **Unknown**:
+1. A registration form will appear.
+2. Enter the name of the person.
+3. Click "Register".
+4. The system will automatically capture **5 photos** to build the profile.
+5. Once registered, try verifying again!
+
 ## 📂 Database Configuration
 Add photos of people you want to recognize in the `db/` directory, organized by name. Each subfolder should be named after the person:
 

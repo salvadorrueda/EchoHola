@@ -58,5 +58,45 @@ def recognize():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    name = data.get('name')
+    images = data.get('images') # List of base64 strings
+
+    if not name or not images or len(images) == 0:
+        return jsonify({'error': 'Missing name or images'}), 400
+
+    # Sanitize name (basic)
+    safe_name = "".join([c for c in name if c.isalnum() or c in (' ', '_', '-')]).strip()
+    if not safe_name:
+        return jsonify({'error': 'Invalid name'}), 400
+
+    user_dir = os.path.join('db', safe_name)
+    if not os.path.exists(user_dir):
+        os.makedirs(user_dir)
+
+    try:
+        for i, img_data in enumerate(images):
+            if ',' in img_data:
+                header, encoded = img_data.split(',', 1)
+            else:
+                encoded = img_data
+            
+            image_bytes = base64.b64decode(encoded)
+            filename = f"capture_{i+1}.jpg"
+            with open(os.path.join(user_dir, filename), "wb") as f:
+                f.write(image_bytes)
+
+        # Clear DeepFace pickle files to ensure new user is indexed
+        for file in os.listdir('db'):
+            if file.endswith('.pkl'):
+                os.remove(os.path.join('db', file))
+        
+        return jsonify({'status': 'success', 'message': f'User {safe_name} registered successfully!'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
