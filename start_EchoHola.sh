@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-APP_URL="http://localhost:5000"
+APP_URL="https://localhost:5000"
 VENV_DIR=".venv"
 
 echo "🚀 Iniciant EchoHola..."
@@ -35,4 +35,4 @@ fi
 
 # 5. Executar l'aplicació Python
 echo "⚡ Executant app.py..."
-python app.py
+python app.py --https
