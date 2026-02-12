@@ -99,4 +99,19 @@ def register():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import argparse
+    parser = argparse.ArgumentParser(description="Run EchoHola App")
+    parser.add_argument('--https', action='store_true', help="Run with HTTPS (self-signed)")
+    args = parser.parse_args()
+
+    run_config = {
+        'debug': True,
+        'host': '0.0.0.0',
+        'port': 5000
+    }
+
+    if args.https:
+        print("Starting server with HTTPS (ad-hoc SSL context)...")
+        run_config['ssl_context'] = 'adhoc'
+
+    app.run(**run_config)
